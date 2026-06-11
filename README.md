@@ -44,14 +44,14 @@ sudo cp litra-cam /usr/local/bin/litra-cam
 Register it as a LaunchAgent so it runs on every login:
 
 ```bash
-cat > ~/Library/LaunchAgents/com.john.litra-cam.plist << 'EOF'
+cat > ~/Library/LaunchAgents/com.jslowik.litra-cam.plist << 'EOF'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
   "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
   <key>Label</key>
-  <string>com.john.litra-cam</string>
+  <string>com.jsloik.litra-cam</string>
   <key>ProgramArguments</key>
   <array>
     <string>/usr/local/bin/litra-cam</string>
@@ -72,7 +72,7 @@ EOF
 Then load it for the current session (this only needs to be done once — subsequent logins are automatic):
 
 ```bash
-launchctl load ~/Library/LaunchAgents/com.john.litra-cam.plist
+launchctl load ~/Library/LaunchAgents/com.jslowik.litra-cam.plist
 ```
 
 ## Verify
@@ -112,13 +112,13 @@ Watching 1 camera device(s)
 ```bash
 swiftc litra-cam.swift -framework CoreMediaIO -o litra-cam
 sudo cp litra-cam /usr/local/bin/litra-cam
-launchctl stop com.john.litra-cam   # KeepAlive will restart it automatically
+launchctl stop com.jslowik.litra-cam   # KeepAlive will restart it automatically
 ```
 
 ## Uninstall
 
 ```bash
-launchctl unload ~/Library/LaunchAgents/com.john.litra-cam.plist
-rm ~/Library/LaunchAgents/com.john.litra-cam.plist
+launchctl unload ~/Library/LaunchAgents/com.jslowik.litra-cam.plist
+rm ~/Library/LaunchAgents/com.jslowik.litra-cam.plist
 sudo rm /usr/local/bin/litra-cam
 ```
