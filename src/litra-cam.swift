@@ -4,8 +4,9 @@ import Foundation
 import CoreMediaIO
 
 // ── Config ─────────────────────────────────────────────────────────
-// Adjust to match `which litra`
-let litraPath = "/opt/homebrew/bin/litra"
+// Apple Silicon Homebrew first, then Intel Homebrew
+let litraPath = ["/opt/homebrew/bin/litra", "/usr/local/bin/litra"]
+    .first { FileManager.default.isExecutableFile(atPath: $0) } ?? "/opt/homebrew/bin/litra"
 
 // ── USB detection ──────────────────────────────────────────────────
 func litraConnected() -> Bool {
@@ -85,24 +86,42 @@ func handleChange(for deviceID: CMIOObjectID) {
     runLitra(cmd)
 }
 
-// ── Entry point ────────────────────────────────────────────────────
-let cameras = allCameraDevices()
-guard !cameras.isEmpty else {
-    fputs("No camera devices found\n", stderr)
-    exit(1)
-}
+// ── Device tracking ────────────────────────────────────────────────
+// Device IDs change when cameras are (un)plugged or a dock is reconnected,
+// so we re-diff the device list on every hardware change instead of
+// registering listeners once at startup.
+var watched = Set<CMIOObjectID>()
 
-print("Watching \(cameras.count) camera device(s)")
+func rescan() {
+    let current = Set(allCameraDevices())
 
-for id in cameras {
-    cameraStates[id] = isInUse(id)  // seed initial state
-}
-
-for id in cameras {
-    var addr = globalAddress(CMIOObjectPropertySelector(kCMIODevicePropertyDeviceIsRunningSomewhere))
-    CMIOObjectAddPropertyListenerBlock(id, &addr, .main) { _, _ in
-        handleChange(for: id)
+    for id in watched.subtracting(current) {
+        watched.remove(id)
+        cameraStates.removeValue(forKey: id)
+        print("[\(Date())] Camera device \(id) removed")
     }
+
+    for id in current.subtracting(watched) {
+        watched.insert(id)
+        cameraStates[id] = isInUse(id)  // seed initial state
+        var addr = globalAddress(CMIOObjectPropertySelector(kCMIODevicePropertyDeviceIsRunningSomewhere))
+        CMIOObjectAddPropertyListenerBlock(id, &addr, .main) { _, _ in
+            handleChange(for: id)
+        }
+        print("[\(Date())] Camera device \(id) added")
+    }
+
+    print("[\(Date())] Watching \(watched.count) camera device(s)")
+}
+
+// ── Entry point ────────────────────────────────────────────────────
+setvbuf(stdout, nil, _IOLBF, 0)
+
+rescan()
+
+var devicesAddr = globalAddress(CMIOObjectPropertySelector(kCMIOHardwarePropertyDevices))
+CMIOObjectAddPropertyListenerBlock(CMIOObjectID(kCMIOObjectSystemObject), &devicesAddr, .main) { _, _ in
+    rescan()
 }
 
 RunLoop.main.run()
