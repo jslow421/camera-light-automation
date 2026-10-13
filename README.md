@@ -71,7 +71,7 @@ Toggle your camera; you should see lines like:
 
 ## Troubleshooting
 
-**Daemon not running** — check `~/Library/Logs/litra-cam.log`, or run `litra-cam` manually in a terminal. TCC may prompt for camera access on first run; approve it.
+**Daemon not running** — check `~/Library/Logs/litra-cam.log` (Homebrew: `$(brew --prefix)/var/log/litra-cam.log`), or run `litra-cam` manually in a terminal. TCC may prompt for camera access on first run; approve it.
 
 **Light doesn't toggle but log shows camera events** — the Litra USB check is failing. Confirm `ioreg -p IOUSB -w0 | grep -i litra` returns output when the light is connected, and that `litra` is installed in one of the paths above.
 
